@@ -20,7 +20,7 @@
         padding: 14px;
       }
 
-      /* 顶部标题栏 */
+      /* 顶部 */
       .header {
         display: flex;
         align-items: center;
@@ -38,28 +38,6 @@
       }
       .header-title { font-size: 15px; font-weight: 700; }
       .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-      .perm-pill {
-        margin-left: auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 7px;
-        border-radius: 999px;
-        border: 1px solid rgba(11,107,255,0.15);
-        background: rgba(255,255,255,0.75);
-        font-size: 10px;
-        color: var(--muted);
-        white-space: nowrap;
-      }
-      .dot {
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        background: rgba(12,42,77,0.28);
-        flex-shrink: 0;
-        transition: background 0.3s;
-      }
-      .dot.ok   { background: #0b6bff; }
-      .dot.warn { background: #ff3b6b; }
 
       /* 倒计时卡片 */
       .card {
@@ -71,25 +49,18 @@
         box-shadow: 0 6px 24px rgba(12,42,77,0.1);
         margin-bottom: 10px;
       }
-      .card-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--muted);
-        margin-bottom: 2px;
-        letter-spacing: 0.3px;
-      }
+      .card-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
       .timer {
         font-size: 48px;
         font-weight: 800;
         letter-spacing: 1px;
         line-height: 1.05;
         font-variant-numeric: tabular-nums;
+        color: var(--text);
+        transition: color 0.3s;
       }
-      .next-hint {
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 2px;
-      }
+      .timer.paused { color: rgba(12,42,77,0.35); }
+      .next-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
       .progress-wrap {
         height: 5px;
         background: rgba(11,107,255,0.1);
@@ -101,8 +72,9 @@
         height: 100%;
         border-radius: 99px;
         background: linear-gradient(90deg, var(--primary), var(--primary2));
-        transition: width 0.9s ease;
+        transition: width 0.9s ease, opacity 0.3s;
       }
+      .progress-bar.paused { opacity: 0.3; }
 
       /* 间隔选择 */
       .row {
@@ -111,12 +83,7 @@
         gap: 8px;
         margin-bottom: 8px;
       }
-      .row-label {
-        font-size: 11px;
-        color: var(--muted);
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
+      .row-label { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
       select {
         flex: 1;
         padding: 7px 9px;
@@ -135,6 +102,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 7px;
+        margin-bottom: 8px;
       }
       button { font: inherit; border: none; cursor: pointer; border-radius: 11px; padding: 10px 6px; font-weight: 700; font-size: 13px; transition: transform 100ms ease, opacity 100ms ease; }
       .btn-primary {
@@ -144,13 +112,70 @@
       }
       .btn-primary:hover  { transform: translateY(-1px); }
       .btn-primary:active { transform: translateY(1px); }
+      .btn-primary:disabled { opacity: 0.4; cursor: default; transform: none; }
       .btn-secondary {
         background: rgba(255,255,255,0.88);
         color: var(--text);
         border: 1px solid rgba(11,107,255,0.16);
         box-shadow: 0 3px 10px rgba(12,42,77,0.07);
       }
-      .btn-secondary:disabled { opacity: 0.5; cursor: default; }
+      .btn-secondary:disabled { opacity: 0.4; cursor: default; }
+
+      /* 开关行（开始提醒 + 通知开关） */
+      .switch-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255,255,255,0.6);
+        border: 1px solid rgba(11,107,255,0.1);
+        border-radius: 11px;
+        padding: 9px 12px;
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+      .switch-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex: 1;
+      }
+      .switch-item:first-child {
+        border-right: 1px solid rgba(11,107,255,0.1);
+        padding-right: 12px;
+        margin-right: 4px;
+      }
+      .switch-label { font-size: 12px; color: var(--text); white-space: nowrap; }
+      .switch-sub { font-size: 10px; color: var(--muted); }
+
+      /* toggle 开关样式 */
+      .toggle {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+      .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+      .toggle-track {
+        position: absolute;
+        inset: 0;
+        border-radius: 99px;
+        background: rgba(12,42,77,0.18);
+        transition: background 0.25s;
+        cursor: pointer;
+      }
+      .toggle input:checked + .toggle-track { background: var(--primary); }
+      .toggle-thumb {
+        position: absolute;
+        top: 3px; left: 3px;
+        width: 14px; height: 14px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        transition: transform 0.25s;
+        pointer-events: none;
+      }
+      .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
 
       /* toast */
       .toast {
@@ -178,21 +203,46 @@
         <div class="header-title">记得喝水！</div>
         <div class="header-sub">保持水分，状态更好。</div>
       </div>
-      <span class="perm-pill">
-        <span class="dot" id="permDot"></span>
-        <span id="permText">通知未知</span>
-      </span>
     </div>
 
     <div class="card">
       <div class="card-label">距离下次喝水</div>
-      <div class="timer" id="timer">30:00</div>
-      <div class="next-hint" id="nextHint">每 30 分钟提醒一次</div>
+      <div class="timer paused" id="timer">--:--</div>
+      <div class="next-hint" id="nextHint">提醒未开启</div>
       <div class="progress-wrap">
-        <div class="progress-bar" id="progressBar" style="width:100%"></div>
+        <div class="progress-bar paused" id="progressBar" style="width:100%"></div>
       </div>
     </div>
 
+    <!-- 两个开关 -->
+    <div class="switch-row">
+      <!-- 开始提醒开关 -->
+      <div class="switch-item">
+        <div>
+          <div class="switch-label">开始提醒</div>
+          <div class="switch-sub" id="timerStatus">未开启</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="timerToggle" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <!-- 通知开关 -->
+      <div class="switch-item">
+        <div>
+          <div class="switch-label">弹出通知</div>
+          <div class="switch-sub" id="notifStatus">未开启</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="notifToggle" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- 间隔选择 -->
     <div class="row">
       <span class="row-label">提醒间隔</span>
       <select id="intervalSelect">
@@ -203,9 +253,10 @@
       </select>
     </div>
 
+    <!-- 我喝了按钮 -->
     <div class="btns">
-      <button class="btn-primary" id="drinkBtn" type="button">我喝了！</button>
-      <button class="btn-secondary" id="enableNotifBtn" type="button">开启通知</button>
+      <button class="btn-primary" id="drinkBtn" type="button" disabled>我喝了！</button>
+      <button class="btn-secondary" id="resetBtn" type="button" disabled>重置倒计时</button>
     </div>
 
     <div class="toast" id="toast"></div>
