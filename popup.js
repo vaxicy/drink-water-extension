@@ -5,6 +5,10 @@ const hintEl        = document.getElementById("nextHint");
 const drinkBtn      = document.getElementById("drinkBtn");
 const resetBtn      = document.getElementById("resetBtn");
 const intervalSelect= document.getElementById("intervalSelect");
+const customRow     = document.getElementById("customRow");
+const customIntervalValue = document.getElementById("customIntervalValue");
+const customIntervalUnit  = document.getElementById("customIntervalUnit");
+const customApplyBtn      = document.getElementById("customApplyBtn");
 const timerToggle   = document.getElementById("timerToggle");
 const notifToggle   = document.getElementById("notifToggle");
 const timerStatus   = document.getElementById("timerStatus");
@@ -13,10 +17,13 @@ const toast         = document.getElementById("toast");
 const progressBar   = document.getElementById("progressBar");
 
 let intervalMinutes = DEFAULT_MINUTES;
+let customMinutes = DEFAULT_MINUTES;
 let tickHandle = null;
 let isRunning = false;
 
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+const PRESET_MINUTES = [15, 30, 45, 60];
 
 function formatMMSS(sec) {
   const s = Math.max(0, Math.floor(sec));
@@ -78,6 +85,30 @@ function applyNotifUI(enabled) {
   notifStatus.textContent = enabled ? "已开启" : "未开启";
 }
 
+function showCustomRow(show) {
+  if (!customRow) return;
+  customRow.classList.toggle("show", !!show);
+}
+
+function minutesFromCustomInput() {
+  const v = Number(customIntervalValue.value);
+  const unit = customIntervalUnit.value;
+  if (!Number.isFinite(v)) return null;
+  if (v <= 0) return null;
+
+  const minutes = unit === "hours" ? v * 60 : v;
+  const rounded = Math.round(minutes);
+  if (!Number.isFinite(rounded) || rounded <= 0) return null;
+  return clamp(rounded, 1, 24 * 60);
+}
+
+function syncCustomInputsFromMinutes(mins) {
+  const m = clamp(Number(mins) || DEFAULT_MINUTES, 1, 24 * 60);
+  // 默认用分钟显示，避免小数小时
+  customIntervalUnit.value = "minutes";
+  customIntervalValue.value = String(m);
+}
+
 async function requestNotifPermission() {
   if (!("Notification" in window)) return false;
   if (Notification.permission === "granted") return true;
@@ -87,15 +118,24 @@ async function requestNotifPermission() {
 
 function init() {
   chrome.storage.local.get(
-    ["intervalMinutes", "alarmStartTime", "timerRunning", "notifEnabled"],
+    ["intervalMinutes", "customMinutes", "alarmStartTime", "timerRunning", "notifEnabled"],
     (data) => {
       intervalMinutes = data.intervalMinutes || DEFAULT_MINUTES;
+      customMinutes = data.customMinutes || data.intervalMinutes || DEFAULT_MINUTES;
       const running   = !!data.timerRunning;
       const notifOn   = !!data.notifEnabled;
 
       // 恢复选择器
-      const opt = intervalSelect.querySelector(`option[value="${intervalMinutes}"]`);
-      if (opt) opt.selected = true;
+      const isPreset = PRESET_MINUTES.includes(Number(intervalMinutes));
+      if (isPreset) {
+        const opt = intervalSelect.querySelector(`option[value="${intervalMinutes}"]`);
+        if (opt) opt.selected = true;
+        showCustomRow(false);
+      } else {
+        intervalSelect.value = "custom";
+        showCustomRow(true);
+        syncCustomInputsFromMinutes(intervalMinutes);
+      }
 
       applyNotifUI(notifOn);
       applyRunningUI(running);
@@ -181,7 +221,16 @@ resetBtn.addEventListener("click", () => {
 
 // ── 事件：修改间隔 ──────────────────────────
 intervalSelect.addEventListener("change", (e) => {
-  intervalMinutes = Number(e.target.value);
+  const v = String(e.target.value);
+  if (v === "custom") {
+    showCustomRow(true);
+    // 回显上次的自定义值
+    syncCustomInputsFromMinutes(customMinutes || intervalMinutes);
+    return;
+  }
+
+  showCustomRow(false);
+  intervalMinutes = Number(v);
   chrome.storage.local.set({ intervalMinutes });
   if (isRunning) {
     chrome.runtime.sendMessage({ type: "SET_ALARM", minutes: intervalMinutes }, () => {
@@ -193,6 +242,32 @@ intervalSelect.addEventListener("change", (e) => {
     });
     showToast("间隔已更新");
   }
+});
+
+// ── 事件：应用自定义间隔 ──────────────────────────
+customApplyBtn.addEventListener("click", () => {
+  const m = minutesFromCustomInput();
+  if (!m) {
+    showToast("请输入有效的时间（1-1440 分钟）");
+    return;
+  }
+  customMinutes = m;
+  intervalMinutes = m;
+  chrome.storage.local.set({ customMinutes, intervalMinutes });
+
+  if (isRunning) {
+    chrome.runtime.sendMessage({ type: "SET_ALARM", minutes: intervalMinutes }, () => {
+      chrome.storage.local.get(["alarmStartTime"], (data) => {
+        hintEl.textContent = `每 ${intervalMinutes} 分钟提醒一次`;
+        render(intervalMinutes * 60);
+        startDisplayTicker(data.alarmStartTime);
+      });
+    });
+  } else {
+    hintEl.textContent = `每 ${intervalMinutes} 分钟提醒一次`;
+    render(intervalMinutes * 60);
+  }
+  showToast("自定义间隔已应用");
 });
 
 window.addEventListener("unload", () => {
