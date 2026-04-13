@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>喝水提醒</title>
+    <style>
+      :root {
+        --text: #0c2a4d;
+        --muted: rgba(12,42,77,0.6);
+        --primary: #0b6bff;
+        --primary2: #20c6ff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        width: 320px;
+        font-family: ui-sans-serif, system-ui, -apple-system,
+          "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        color: var(--text);
+        background: linear-gradient(150deg, #eaf5ff 0%, #daeaff 100%);
+        padding: 14px;
+      }
+
+      /* 顶部标题栏 */
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .cup-icon {
+        font-size: 24px;
+        animation: bob 2.6s ease-in-out infinite;
+        line-height: 1;
+      }
+      @keyframes bob {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+      .header-title { font-size: 15px; font-weight: 700; }
+      .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+      .perm-pill {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(11,107,255,0.15);
+        background: rgba(255,255,255,0.75);
+        font-size: 10px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: rgba(12,42,77,0.28);
+        flex-shrink: 0;
+        transition: background 0.3s;
+      }
+      .dot.ok   { background: #0b6bff; }
+      .dot.warn { background: #ff3b6b; }
+
+      /* 倒计时卡片 */
+      .card {
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(11,107,255,0.12);
+        border-radius: 14px;
+        padding: 14px 14px 12px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 6px 24px rgba(12,42,77,0.1);
+        margin-bottom: 10px;
+      }
+      .card-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 2px;
+        letter-spacing: 0.3px;
+      }
+      .timer {
+        font-size: 48px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 1.05;
+        font-variant-numeric: tabular-nums;
+      }
+      .next-hint {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .progress-wrap {
+        height: 5px;
+        background: rgba(11,107,255,0.1);
+        border-radius: 99px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, var(--primary), var(--primary2));
+        transition: width 0.9s ease;
+      }
+
+      /* 间隔选择 */
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .row-label {
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      select {
+        flex: 1;
+        padding: 7px 9px;
+        border-radius: 9px;
+        border: 1px solid rgba(11,107,255,0.16);
+        background: rgba(255,255,255,0.88);
+        color: var(--text);
+        outline: none;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      /* 按钮区 */
+      .btns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+      }
+      button { font: inherit; border: none; cursor: pointer; border-radius: 11px; padding: 10px 6px; font-weight: 700; font-size: 13px; transition: transform 100ms ease, opacity 100ms ease; }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary2));
+        color: #fff;
+        box-shadow: 0 5px 16px rgba(11,107,255,0.3);
+      }
+      .btn-primary:hover  { transform: translateY(-1px); }
+      .btn-primary:active { transform: translateY(1px); }
+      .btn-secondary {
+        background: rgba(255,255,255,0.88);
+        color: var(--text);
+        border: 1px solid rgba(11,107,255,0.16);
+        box-shadow: 0 3px 10px rgba(12,42,77,0.07);
+      }
+      .btn-secondary:disabled { opacity: 0.5; cursor: default; }
+
+      /* toast */
+      .toast {
+        position: fixed;
+        bottom: 10px; left: 50%;
+        transform: translateX(-50%) translateY(12px);
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(12,42,77,0.85);
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        transition: opacity 150ms ease, transform 150ms ease;
+        white-space: nowrap;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="cup-icon">🥤</div>
+      <div>
+        <div class="header-title">记得喝水！</div>
+        <div class="header-sub">保持水分，状态更好。</div>
+      </div>
+      <span class="perm-pill">
+        <span class="dot" id="permDot"></span>
+        <span id="permText">通知未知</span>
+      </span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">距离下次喝水</div>
+      <div class="timer" id="timer">30:00</div>
+      <div class="next-hint" id="nextHint">每 30 分钟提醒一次</div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">提醒间隔</span>
+      <select id="intervalSelect">
+        <option value="15">每 15 分钟</option>
+        <option value="30" selected>每 30 分钟</option>
+        <option value="45">每 45 分钟</option>
+        <option value="60">每 60 分钟</option>
+      </select>
+    </div>
+
+    <div class="btns">
+      <button class="btn-primary" id="drinkBtn" type="button">我喝了！</button>
+      <button class="btn-secondary" id="enableNotifBtn" type="button">开启通知</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

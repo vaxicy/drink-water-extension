@@ -1,0 +1,24 @@
+{
+    "manifest_version": 3,
+    "name": "喝水提醒",
+    "description": "定时提醒你喝水，保持健康状态。",
+    "version": "1.0",
+    "action": {
+      "default_popup": "popup.html",
+      "default_title": "喝水提醒",
+      "default_icon": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "permissions": ["notifications", "storage", "alarms"],
+    "icons": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  }
