@@ -96,6 +96,39 @@
         font-size: 12px;
         cursor: pointer;
       }
+      .custom-row {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .custom-row.show { display: flex; }
+      .custom-input {
+        flex: 1;
+        padding: 7px 9px;
+        border-radius: 9px;
+        border: 1px solid rgba(11,107,255,0.16);
+        background: rgba(255,255,255,0.88);
+        color: var(--text);
+        outline: none;
+        font: inherit;
+        font-size: 12px;
+      }
+      .custom-unit {
+        width: 76px;
+        flex: 0 0 auto;
+      }
+      .custom-apply {
+        width: 68px;
+        flex: 0 0 auto;
+        padding: 8px 10px;
+        border-radius: 9px;
+        font-weight: 800;
+        font-size: 12px;
+        background: linear-gradient(135deg, var(--primary), var(--primary2));
+        color: #fff;
+        box-shadow: 0 5px 16px rgba(11,107,255,0.25);
+      }
 
       /* 按钮区 */
       .btns {
@@ -250,7 +283,19 @@
         <option value="30" selected>每 30 分钟</option>
         <option value="45">每 45 分钟</option>
         <option value="60">每 60 分钟</option>
+        <option value="custom">自定义…</option>
       </select>
+    </div>
+
+    <!-- 自定义间隔 -->
+    <div class="custom-row" id="customRow">
+      <span class="row-label">自定义</span>
+      <input class="custom-input" id="customIntervalValue" type="number" min="1" max="720" step="1" placeholder="输入数值" />
+      <select id="customIntervalUnit" class="custom-unit">
+        <option value="minutes" selected>分钟</option>
+        <option value="hours">小时</option>
+      </select>
+      <button class="custom-apply" id="customApplyBtn" type="button">应用</button>
     </div>
 
     <!-- 我喝了按钮 -->
